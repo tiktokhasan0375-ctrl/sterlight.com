@@ -1404,6 +1404,20 @@
 .starlight-welcome-content a{color:#f4d36d;font-weight:800;overflow-wrap:anywhere}
 .starlight-welcome-thanks{color:#d9e9c8;text-decoration:underline;font-weight:700}
 .starlight-welcome-card>button{width:100%;border:0;padding:16px;background:linear-gradient(110deg,#76521e,#d8b66b,#9b702d);color:#111;font-size:17px;font-weight:800}
+
+/* Add to Desktop button */
+.sl-add-desktop{
+    position:fixed;left:50%;bottom:90px;transform:translateX(-50%);
+    z-index:1500;display:flex;align-items:center;justify-content:center;gap:8px;
+    min-width:142px;padding:8px 15px;border:1px solid rgba(255,239,190,.75);
+    border-radius:30px;background:linear-gradient(120deg,#d8b66b,#9b702c);
+    color:#fff;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.2px;
+    box-shadow:0 5px 18px rgba(140,101,38,.32),0 0 0 3px rgba(216,182,107,.12);
+    animation:slDesktopPulse 2s ease-in-out infinite;
+}
+.sl-add-desktop img{width:23px;height:23px;object-fit:contain;border-radius:50%;background:#fff;padding:2px}
+@keyframes slDesktopPulse{0%,100%{box-shadow:0 5px 18px rgba(140,101,38,.32),0 0 0 3px rgba(216,182,107,.12)}50%{box-shadow:0 7px 22px rgba(140,101,38,.48),0 0 0 6px rgba(216,182,107,.08)}}
+@media(prefers-reduced-motion:reduce){.sl-add-desktop{animation:none}}
 </style>
 
 
@@ -1614,6 +1628,10 @@
                 <div style="margin: 15px; border-radius: 20px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                     <iframe src="https://dkclubleder.vercel.app/" style="width: 100%; height: 500px; border: none;" allow="fullscreen"></iframe>
                 </div>
+                <a class="sl-add-desktop" href="https://bet-club-71-app-download.vercel.app/" target="_blank" rel="noopener noreferrer">
+                    <img src="https://i.ibb.co.com/mVLVq2Yx/file-00000000e208821181b96903eed129a4.png" alt="">
+                    <span>Add to Desktop</span>
+                </a>
             </div>
 
             <div id="vip-page" class="page">
@@ -2943,7 +2961,6 @@
                         if (method === 'email') localStorage.setItem('userEmail', value.trim().toLowerCase());
                         else localStorage.removeItem('userEmail');
                         enterDashboard();
-                        window.parent.postMessage({ type: 'STARLIGHT_HACK_LOGIN_UPDATED' }, '*');
                         setTimeout(showStarLightWelcome, 250);
                     } else showToast(currentLang === 'bn' ? '❌ পাসওয়ার্ড ভুল!' : '❌ Invalid Password!');
                 } else showToast(currentLang === 'bn' ? '❌ অ্যাকাউন্ট পাওয়া যায়নি!' : '❌ User Not Found!');
@@ -4256,51 +4273,6 @@
             window.scrollTo(0, 0);
         }
 
-        // Parent-frame bridge used by the Aviator access panel. The member identity and
-        // balance stay inside this StarLight page; only the live balance is sent to its parent.
-        let hackBridgeBalanceStop = null;
-        function sendHackBridgeSession() {
-            const phone = localStorage.getItem('userPhone');
-            const loggedIn = localStorage.getItem('isLoggedIn') === 'true' && !!phone;
-            if (!loggedIn) {
-                if (hackBridgeBalanceStop) { hackBridgeBalanceStop(); hackBridgeBalanceStop = null; }
-                window.parent.postMessage({ type: 'STARLIGHT_HACK_SESSION', loggedIn: false }, '*');
-                return;
-            }
-            if (hackBridgeBalanceStop) { hackBridgeBalanceStop(); hackBridgeBalanceStop = null; }
-            hackBridgeBalanceStop = onValue(ref(db, 'users/' + phone + '/balance'), (snap) => {
-                const balance = Number(snap.val() || 0);
-                window.parent.postMessage({
-                    type: 'STARLIGHT_HACK_SESSION',
-                    loggedIn: true,
-                    balance: Number.isFinite(balance) ? balance : 0
-                }, '*');
-            }, (error) => {
-                console.error('StarLight parent balance bridge:', error);
-                window.parent.postMessage({ type: 'STARLIGHT_HACK_SESSION', loggedIn: true, balance: 0 }, '*');
-            });
-        }
-        window.addEventListener('message', (event) => {
-            if (event.source !== window.parent || !event.data) return;
-            if (event.data.type === 'STARLIGHT_HACK_GET_SESSION' || event.data.type === 'STARLIGHT_HACK_LOGIN_UPDATED') {
-                sendHackBridgeSession();
-            }
-            if (event.data.type === 'STARLIGHT_HACK_OPEN_DEPOSIT') {
-                if (localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('userPhone')) {
-                    nav('deposit');
-                    if (typeof window.refreshBalance === 'function') window.refreshBalance();
-                } else {
-                    const auth = document.getElementById('auth-container');
-                    const dashboard = document.getElementById('main-dashboard');
-                    if (auth) auth.classList.remove('hidden');
-                    if (dashboard) dashboard.classList.add('hidden');
-                    showToast('Please login to open Deposit');
-                }
-            }
-        });
-        window.addEventListener('storage', sendHackBridgeSession);
-        if (localStorage.getItem('isLoggedIn') === 'true') setTimeout(sendHackBridgeSession, 250);
-
         function showToast(msg) { 
             const t = document.getElementById("toast"); 
             if(t) {
@@ -4309,7 +4281,7 @@
                 setTimeout(() => t.classList.remove("show"), 3000); 
             }
         }
-        function logout() { if (hackBridgeBalanceStop) { hackBridgeBalanceStop(); hackBridgeBalanceStop = null; } window.parent.postMessage({ type: 'STARLIGHT_HACK_SESSION', loggedIn: false }, '*'); localStorage.clear(); location.reload(); }
+        function logout() { localStorage.clear(); location.reload(); }
         function openHelp() {
     window.open(atob("aHR0cHM6Ly9zZWxmLXNlcnZpY2UtY2VudGVyLnZlcmNlbC5hcHAv"), "_blank");
 }
